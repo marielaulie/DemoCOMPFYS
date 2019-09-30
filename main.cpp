@@ -7,8 +7,6 @@
 #include <armadillo>
 #include "time.h"
 
-//2.d Quantum dots in three dimensions
-
 using namespace std;
 using namespace arma;
 
@@ -16,6 +14,8 @@ using namespace arma;
 arma::mat make_tridiag_A(int n);
 void maxval(mat A, double max, int &k, int &l, int n);
 void Jacobi(mat &A, mat R, int k, int l, int n);
+
+
 
 int main (int argc, char* argv[])
 {
@@ -28,13 +28,17 @@ int main (int argc, char* argv[])
 
   //The eigenvals for A using armadillo
   arma::vec eigvals = arma::eig_sym(A);
-  cout << "The analytical eigenvalues are " << endl;
+
   //Analytival Eigenvalues
-  //double analytic_eig[n];
-  vec analytic_eig = {3,5,7,11,13,17,19,23,29,31};
+  double analytic_eig[n];
   for(int i=0 ; i < n ; i++) {
+      double h = 1/(double) (n+1);
+      double d = 2.0/(h*h);
+      double a = -1.0/(h*h);
+      analytic_eig[i] = d + 2*a*cos(i*3.14/(n+1))*i;
       cout << analytic_eig[i] << endl;
-  }
+
+     }
 
   double tolerance = 1.0E-10;
   double max=3;
@@ -42,7 +46,8 @@ int main (int argc, char* argv[])
   int count = 0;
   clock_t start, finish;
   start = clock();
-  while (abs(max) > tolerance, count < atoi(argv[2])){
+  while (abs(max) > tolerance, count < 100){
+
      maxval(A, max, k, l, n);
      Jacobi(A, R, k, l, n);
      count = count + 1;
@@ -50,24 +55,19 @@ int main (int argc, char* argv[])
   finish = clock();
   double timeused = (double) (finish - start)/(CLOCKS_PER_SEC );
 
-  cout << "The armadillo eigenvalues are" << endl;
-  cout << eigvals << endl;
   cout << setiosflags(ios::showpoint | ios::uppercase);
-  cout << "n = " << n << endl;
-  cout << setw(20) << "The time used = " << timeused  << endl;
-  cout << setw(20) << "Number of iterations in the while loop = "<< count << endl;
-  cout << "The tolerance factor is " << tolerance << endl;
-
-  cout << "The new matrice A: " << endl;
-  cout <<  A << endl;
-  cout << "The eigenvector matrice R:" << endl;
+  cout << setprecision(10) << setw(20) << "Time used =" << timeused  << endl;
+  cout << count << endl;
+  cout << tolerance << endl;
+  cout << eigvals << endl;
+  cout << A << endl;
   cout << R << endl;
 
-}
+ }
 
 
 arma::mat make_tridiag_A(int n){
-    //Making the first A matrice, now with added potential on the diagonal elements
+    //Making the first A matrice
     double h = 1/(double) (n+1); //stepsize
     double d = 2.0/(h*h);
     double a = -1.0/(h*h);
@@ -77,14 +77,9 @@ arma::mat make_tridiag_A(int n){
 
     for(int i=0 ; i < n ; i++) {
        for(int j=0 ; j < n ; j++) {
-           double h = 1/(double) (n+1);
-           double p[n];
-           double V[n];
-           p[i] = i*h;
-           V[i] = p[i]*p[i]; //Harmonic Oscillator potential
 
            if (i == j){
-               A(i,j) = d + V[i];
+               A(i,j) = d;
            }
            else if (abs(i-j)<=1) {
                A(i,j) = a;
@@ -93,6 +88,7 @@ arma::mat make_tridiag_A(int n){
            else {
                A(i,j) = 0.0;
            }
+
 
        }
      }
@@ -104,6 +100,7 @@ arma::mat make_tridiag_A(int n){
 
 void maxval(mat A, double max, int &k, int &l, int n){
     //Finding the maximal off-diagonal value
+
     for (int i = 0; i < n; ++i)
     {
         for (int j = i+1; j < n; ++j)
